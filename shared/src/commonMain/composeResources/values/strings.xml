@@ -1,0 +1,97 @@
+<resources>
+    <string name="app_name">Congatrol</string>
+
+    <string name="tab_map">Map</string>
+    <string name="tab_drive">Drive</string>
+    <string name="tab_robot">Robot</string>
+
+    <string name="action_start">Start cleaning</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+
+    <string name="status_docked">Docked</string>
+    <string name="status_idle">Idle</string>
+    <string name="status_cleaning">Cleaning</string>
+    <string name="status_paused">Paused</string>
+    <string name="status_returning">Heading home</string>
+    <string name="status_moving">On the move</string>
+    <string name="status_manual_control">Driven by hand</string>
+    <string name="status_error">Needs a hand</string>
+    <string name="status_unknown">Robot</string>
+    <string name="battery">Battery %1$d%%</string>
+    <string name="battery_charging">Battery %1$d%% · charging</string>
+
+    <string name="connect_title">Where is the robot?</string>
+    <string name="connect_body">Enter the address of a robot running Congatudo or Valetudo on your network — the one you open its web interface with.</string>
+    <string name="connect_unreachable_title">No answer from the robot</string>
+    <string name="connect_unreachable_body">Nothing answers at %1$s. The app keeps trying; check that the robot is on and that this device is on the same network.</string>
+    <string name="connect_connecting">Looking for the robot…</string>
+    <string name="address_label">Robot address</string>
+    <string name="address_placeholder">192.168.1.50 or robot.local</string>
+    <string name="address_save">Connect</string>
+
+    <string name="command_failed">The robot did not take that.</string>
+
+    <string name="map_empty">The robot has no map yet. It draws one on its first run.</string>
+    <string name="map_recenter">Show the whole map</string>
+    <string name="mode_rooms">Rooms</string>
+    <string name="mode_zone">Zone</string>
+    <string name="mode_go_to">Go to</string>
+    <string name="hint_rooms">Tap the rooms to clean</string>
+    <string name="hint_zone">Drag over the area to clean</string>
+    <string name="hint_go_to">Tap where the robot should go</string>
+    <string name="confirm_rooms">Clean %1$d rooms</string>
+    <string name="confirm_room">Clean %1$s</string>
+    <string name="confirm_zone">Clean this zone</string>
+    <string name="confirm_go_to">Go here</string>
+    <string name="suction">Suction</string>
+    <string name="water">Water</string>
+    <string name="preset_off">Off</string>
+    <string name="preset_min">Min</string>
+    <string name="preset_low">Low</string>
+    <string name="preset_medium">Medium</string>
+    <string name="preset_high">High</string>
+    <string name="preset_max">Max</string>
+    <string name="preset_turbo">Turbo</string>
+    <string name="stop">Stop</string>
+    <string name="dock">Dock</string>
+
+    <string name="drive_title">Drive</string>
+    <string name="drive_switch">Manual control</string>
+    <string name="drive_switch_body">Takes the robot off its dock and stops whatever it was doing. Each press is one step; hold for more.</string>
+    <string name="drive_unsupported">This robot cannot be driven by hand.</string>
+    <string name="drive_forward">Forward</string>
+    <string name="drive_backward">Backward</string>
+    <string name="drive_left">Turn left</string>
+    <string name="drive_right">Turn right</string>
+
+    <string name="robot_title">Robot</string>
+    <string name="robot_connection">Connection</string>
+    <string name="robot_sound">Sound</string>
+    <string name="robot_locate">Find the robot</string>
+    <string name="robot_locate_body">Makes it call out so you can hear where it is.</string>
+    <string name="robot_volume">Volume %1$d%%</string>
+    <string name="robot_cleaning">Cleaning</string>
+    <string name="robot_carpet">Carpet mode</string>
+    <string name="robot_carpet_body">More suction on carpet.</string>
+    <string name="robot_quiet">Do not disturb</string>
+    <string name="robot_quiet_on">On, %1$s</string>
+    <string name="robot_quiet_off">Off</string>
+    <string name="robot_consumables">Wear</string>
+    <string name="robot_reset">Reset</string>
+    <string name="robot_reset_title">Reset %1$s?</string>
+    <string name="robot_reset_body">Do this after replacing or cleaning it: the counter starts again from full.</string>
+    <string name="robot_cancel">Cancel</string>
+    <string name="robot_about">About</string>
+    <string name="robot_model">Model</string>
+    <string name="robot_version">Software</string>
+    <string name="robot_wifi">Wi‑Fi signal</string>
+    <string name="robot_wifi_value">%1$d dBm</string>
+    <string name="consumable_main_brush">Main brush</string>
+    <string name="consumable_side_brush">Side brush</string>
+    <string name="consumable_filter">Filter</string>
+    <string name="consumable_mop">Mop</string>
+    <string name="consumable_sensor">Sensors</string>
+    <string name="consumable_hours">%1$d h left</string>
+    <string name="consumable_percent">%1$d%% left</string>
+</resources>
