@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""Generates the app's icon drawables from an Iconify icon set.
+
+Writes one Android vector drawable per entry of ICONS into the shared module's composeResources —
+the format Compose Multiplatform renders on every platform.
+
+    bin/import-icons                 # the pinned Phosphor release
+    bin/import-icons path/to/icons.json
+
+Any Iconify JSON set works (https://github.com/iconify/icon-sets), as long as it has an icon for
+every name; to try another set, point SOURCE at it and change the names in ICONS.
+"""
+
+import json
+import sys
+import urllib.request
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+SOURCE = "https://cdn.jsdelivr.net/npm/@iconify-json/ph@1.2.2/icons.json"
+
+# Drawable name -> full name in the icon set, weight included. Phosphor ships each icon in six
+# weights; the app uses the two-tone one, and the filled or bold one where an icon sits on the
+# accent or is a plain control.
+ICONS: dict[str, str] = {
+    "tab-map": "map-trifold-duotone",
+    "tab-drive": "game-controller-duotone",
+    "tab-robot": "robot-duotone",
+    "play": "play-fill",
+    "pause": "pause-fill",
+    "stop": "stop-duotone",
+    "dock": "house-duotone",
+    "locate": "bell-ringing-duotone",
+    "fan": "fan-duotone",
+    "water": "drop-duotone",
+    "rooms": "squares-four-duotone",
+    "zone": "selection-duotone",
+    "go-to": "map-pin-duotone",
+    "recenter": "corners-out-bold",
+    "arrow-up": "arrow-up-bold",
+    "arrow-down": "arrow-down-bold",
+    "turn-left": "arrow-counter-clockwise-bold",
+    "turn-right": "arrow-clockwise-bold",
+    "warning": "warning-duotone",
+}
+
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "shared/src/commonMain/composeResources/drawable"
+
+INHERITED = ("fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "fill-opacity")
+
+
+def num(value: float) -> str:
+    return f"{value:.3f}".rstrip("0").rstrip(".")
+
+
+def rect_path(el: ET.Element) -> str:
+    x, y = float(el.get("x", 0)), float(el.get("y", 0))
+    w, h = float(el.get("width")), float(el.get("height"))
+    rx = float(el.get("rx", el.get("ry", 0)))
+    ry = float(el.get("ry", rx))
+    rx, ry = min(rx, w / 2), min(ry, h / 2)
+    if rx == 0 or ry == 0:
+        return f"M{num(x)},{num(y)}h{num(w)}v{num(h)}h{num(-w)}z"
+    corner = f"a{num(rx)},{num(ry)} 0 0 1 "
+    return (
+        f"M{num(x + rx)},{num(y)}h{num(w - 2 * rx)}{corner}{num(rx)},{num(ry)}"
+        f"v{num(h - 2 * ry)}{corner}{num(-rx)},{num(ry)}"
+        f"h{num(-(w - 2 * rx))}{corner}{num(-rx)},{num(-ry)}"
+        f"v{num(-(h - 2 * ry))}{corner}{num(rx)},{num(-ry)}z"
+    )
+
+
+def ellipse_path(cx: float, cy: float, rx: float, ry: float) -> str:
+    arc = f"a{num(rx)},{num(ry)} 0 1 0 "
+    return f"M{num(cx - rx)},{num(cy)}{arc}{num(2 * rx)},0{arc}{num(-2 * rx)},0z"
+
+
+def path_data(el: ET.Element) -> str:
+    tag = el.tag.split("}")[-1]
+    if tag == "path":
+        return el.get("d")
+    if tag == "rect":
+        return rect_path(el)
+    if tag == "circle":
+        r = float(el.get("r"))
+        return ellipse_path(float(el.get("cx", 0)), float(el.get("cy", 0)), r, r)
+    if tag == "ellipse":
+        return ellipse_path(float(el.get("cx", 0)), float(el.get("cy", 0)), float(el.get("rx")), float(el.get("ry")))
+    if tag == "line":
+        return f"M{el.get('x1')},{el.get('y1')}L{el.get('x2')},{el.get('y2')}"
+    if tag in ("polyline", "polygon"):
+        return "M" + el.get("points").strip() + ("z" if tag == "polygon" else "")
+    raise ValueError(f"cannot convert <{tag}>")
+
+
+def color(value: str) -> str:
+    # The drawable is tinted where it is used, so any paint becomes plain black.
+    return "#000000" if value == "currentColor" or value.startswith("#") else value
+
+
+def paths(el: ET.Element, inherited: dict[str, str]) -> list[str]:
+    style = {**inherited, **{k: el.get(k) for k in INHERITED if el.get(k) is not None}}
+    if el.tag.split("}")[-1] in ("g", "svg"):
+        return [p for child in el for p in paths(child, style)]
+    attrs = [f'android:pathData="{path_data(el)}"']
+    fill, stroke = style.get("fill", "#000000"), style.get("stroke", "none")
+    if fill != "none":
+        attrs.append(f'android:fillColor="{color(fill)}"')
+        alpha = style.get("fill-opacity", style.get("opacity"))
+        if alpha is not None:
+            attrs.append(f'android:fillAlpha="{alpha}"')
+    if stroke != "none":
+        attrs.append(f'android:strokeColor="{color(stroke)}"')
+        attrs.append(f'android:strokeWidth="{style.get("stroke-width", "1")}"')
+        if "stroke-linecap" in style:
+            attrs.append(f'android:strokeLineCap="{style["stroke-linecap"]}"')
+        if "stroke-linejoin" in style:
+            attrs.append(f'android:strokeLineJoin="{style["stroke-linejoin"]}"')
+    return ["    <path\n        " + "\n        ".join(attrs) + " />"]
+
+
+def drawable(icon: dict, width: int, height: int) -> str:
+    svg = ET.fromstring(f"<svg>{icon['body']}</svg>")
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
+        '    android:width="24dp"\n'
+        '    android:height="24dp"\n'
+        f'    android:viewportWidth="{width}"\n'
+        f'    android:viewportHeight="{height}">\n' + "\n".join(paths(svg, {})) + "\n</vector>\n"
+    )
+
+
+def main() -> None:
+    source = sys.argv[1] if len(sys.argv) > 1 else SOURCE
+    raw = urllib.request.urlopen(source).read() if "://" in source else Path(source).read_bytes()
+    icon_set = json.loads(raw)
+    names = dict(ICONS)
+    missing = [f"{key} ({name})" for key, name in names.items() if name not in icon_set["icons"]]
+    if missing:
+        sys.exit(f"not in the icon set: {', '.join(missing)}")
+    OUT.mkdir(parents=True, exist_ok=True)
+    for stale in OUT.glob("ic_*.xml"):
+        stale.unlink()
+    for key, name in names.items():
+        icon = icon_set["icons"][name]
+        xml = drawable(icon, icon.get("width", icon_set.get("width", 24)), icon.get("height", icon_set.get("height", 24)))
+        (OUT / f"ic_{key.replace('-', '_')}.xml").write_text(xml)
+    print(f"wrote {len(names)} icons to {OUT.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

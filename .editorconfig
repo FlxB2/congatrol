@@ -1,0 +1,23 @@
+root = true
+
+[*]
+insert_final_newline = true
+
+#  Disable wildcard imports entirely
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_packages_to_use_import_on_demand = unset
+
+[*.{kt,kts}]
+ktlint_code_style = ktlint_official
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+
+# Generated sources (Compose resources) — don't lint them.
+[**/build/**/*.{kt,kts}]
+ktlint_standard = disabled
+[*.{kt,kts}]
+# Composable functions use PascalCase, which conflicts with function-naming.
+ktlint_standard_function-naming = disabled
+# The one CompositionLocal of the app's own: what the look says beyond Material's colour roles.
+compose_allowed_composition_locals = LocalCongatrolLook

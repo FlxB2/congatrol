@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Mirrors Material 3's default light `surface`, which is what CongatrolTheme paints first. Kept in
+      sync with values-night/colors.xml so the pre-Compose window matches Compose's first frame.
+    -->
+    <color name="launch_background">#FFFEF7FF</color>
+</resources>

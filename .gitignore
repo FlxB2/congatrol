@@ -1,0 +1,30 @@
+*.iml
+.kotlin
+.gradle
+**/build/
+xcuserdata
+!src/**/build/
+local.properties
+# app/ is opened in IntelliJ as its own project; only the config every checkout should share is tracked.
+.idea/*
+!.idea/runConfigurations/
+!.idea/runConfigurations.xml
+!.idea/inspectionProfiles/
+!.idea/AndroidProjectSystem.xml
+!.idea/kotlinc.xml
+!.idea/xcode.xml
+!.idea/vcs.xml
+!.idea/icon.svg
+.DS_Store
+captures
+.externalNativeBuild
+.cxx
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# Agent worktrees
+.claude/worktrees/

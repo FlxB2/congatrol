@@ -1,0 +1,24 @@
+// iOS host identity & signing.
+
+// Bundle identifier. TEAM_ID is intentionally NOT appended here — the App Store
+// Connect identity must stay stable regardless of who signs the build.
+BUNDLE_ID = xyz.felixb.congatrol
+
+// PRODUCT_NAME / executable name.
+APP_NAME = Congatrol
+
+// Home-screen name (CFBundleDisplayName).
+APP_DISPLAY_NAME = Congatrol
+
+// The :shared Kotlin targets are iosArm64 + iosSimulatorArm64 only (no iosX64),
+// so the Intel simulator slice has no framework. Release-style configs default
+// to ONLY_ACTIVE_ARCH=NO, which would ask the KMP build phase for x86_64 on the
+// simulator and fail ("architecture not configured"). Drop it on the simulator
+// SDK; device/archive builds are arm64-only and unaffected.
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64
+
+// Apple Developer Team ID — fill in for device / TestFlight signing.
+TEAM_ID =
+
+// Room's bundled SQLite driver ships native code that needs the system C++ runtime.
+OTHER_LDFLAGS = $(inherited) -l"c++"
