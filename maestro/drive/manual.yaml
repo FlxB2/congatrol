@@ -1,0 +1,29 @@
+# Manual control is switched on, takes a step, and is switched off again.
+appId: ${APP_ID}
+---
+- runFlow: ../common/launch_demo.yaml
+- tapOn:
+    id: "tab_drive"
+- tapOn:
+    id: "drive_switch"
+- tapOn:
+    id: "drive_Forward"
+    enabled: true
+- tapOn:
+    id: "tab_map"
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Driven by hand"
+    timeout: 10000
+- tapOn:
+    id: "tab_drive"
+- tapOn:
+    id: "drive_switch"
+- tapOn:
+    id: "tab_map"
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Idle"
+    timeout: 10000

@@ -1,0 +1,13 @@
+{
+  "uniqueId": "com.ateliertriay:bricolage-grotesque",
+  "name": "Bricolage Grotesque",
+  "website": "https://github.com/ateliertriay/bricolage",
+  "developers": [
+    {
+      "name": "The Bricolage Grotesque Project Authors"
+    }
+  ],
+  "licenses": [
+    "bricolage-ofl"
+  ]
+}

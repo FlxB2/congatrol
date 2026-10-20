@@ -1,0 +1,19 @@
+# A name given on the Robot tab shows above the status on the map.
+appId: ${APP_ID}
+---
+- runFlow: ../common/launch_demo.yaml
+- assertNotVisible:
+    id: "robot_name"
+- tapOn:
+    id: "tab_robot"
+- tapOn:
+    id: "name_field"
+- inputText: "Rosie"
+# Saving puts the keyboard away, which leaves the bar free to be tapped.
+- tapOn:
+    id: "name_save"
+- tapOn:
+    id: "tab_map"
+- assertVisible:
+    id: "robot_name"
+    text: "Rosie"

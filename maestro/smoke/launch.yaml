@@ -1,0 +1,21 @@
+# The app starts, finds its robot docked, draws the map and reaches every tab.
+appId: ${APP_ID}
+---
+- runFlow: ../common/launch_demo.yaml
+- assertVisible:
+    id: "status"
+    text: "Docked"
+- assertVisible:
+    id: "map"
+- tapOn:
+    id: "tab_drive"
+- assertVisible:
+    id: "drive_switch"
+- tapOn:
+    id: "tab_robot"
+- assertVisible:
+    id: "name_field"
+- tapOn:
+    id: "tab_map"
+- assertVisible:
+    id: "map"

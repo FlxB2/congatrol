@@ -1,0 +1,34 @@
+# The round button starts, pauses and resumes a run; Dock sends the robot home.
+appId: ${APP_ID}
+---
+- runFlow: ../common/launch_demo.yaml
+- tapOn:
+    id: "tab_action"
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Cleaning"
+    timeout: 10000
+- tapOn:
+    id: "tab_action"
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Paused"
+    timeout: 10000
+- tapOn:
+    id: "tab_action"
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Cleaning"
+    timeout: 10000
+- runFlow: ../common/reveal_controls.yaml
+- tapOn:
+    id: "dock"
+- runFlow: ../common/reveal_status.yaml
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Docked"
+    timeout: 10000

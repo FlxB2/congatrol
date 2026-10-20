@@ -105,7 +105,12 @@ fun parseMap(json: JsonObject): RobotMap {
         val first = if (points.size >= 2) Offset(points[0] / cellSize, points[1] / cellSize) else null
         when (entity["type"]?.jsonPrimitive?.contentOrNull) {
             "robot_position" -> {
-                val angle = entity["metaData"]?.jsonObject?.get("angle")?.jsonPrimitive?.floatOrNull ?: 0f
+                val angle =
+                    entity["metaData"]
+                        ?.jsonObject
+                        ?.get("angle")
+                        ?.jsonPrimitive
+                        ?.floatOrNull ?: 0f
                 robot = first?.let { MapPose(it, angle) }
             }
             "charger_location" -> charger = first

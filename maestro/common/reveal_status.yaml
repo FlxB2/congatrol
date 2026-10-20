@@ -1,0 +1,11 @@
+# Scrolls the map screen back down to its top, where the status is — the way back from
+# reveal_controls.yaml. It too swipes on the mode row, because a drag over the map moves the map.
+appId: ${APP_ID}
+tags:
+  - util
+---
+- swipe:
+    from:
+      id: "mode_Zone"
+    direction: DOWN
+- waitForAnimationToEnd

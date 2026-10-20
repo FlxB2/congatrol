@@ -1,0 +1,7 @@
+# Which flows `maestro test maestro/` runs. A directory that is not globbed here is never run —
+# which looks exactly like a suite that passes — so add new flow directories to this list.
+flows:
+  - "smoke/*"
+  - "map/*"
+  - "drive/*"
+  - "robot/*"

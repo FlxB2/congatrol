@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The activity theme only ever paints the starting window: everything after Compose's first
+      frame comes from CongatrolTheme. It still has to follow the system's night mode, otherwise the
+      launch window stays white while the app itself renders dark. Platform Theme.Material.DayNight
+      needs API 29, so the light/dark split is done with a values-night variant instead (minSdk 26).
+    -->
+    <style name="Theme.Congatrol" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/launch_background</item>
+    </style>
+</resources>

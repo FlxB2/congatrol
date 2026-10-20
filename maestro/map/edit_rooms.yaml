@@ -1,0 +1,40 @@
+# A room is renamed and then split in two. The map is a drawing, so what rooms it has is read off
+# its description. Joining is left to the unit tests: it takes taps on two rooms, and where a room
+# is on the screen differs from device to device.
+appId: ${APP_ID}
+---
+- runFlow: ../common/launch_demo.yaml
+- assertVisible: "Map. Rooms: Living room, Kitchen, Bedroom"
+- tapOn:
+    id: "map_edit"
+- assertVisible: "Tap a room, or two to join them"
+# The middle of the map is in the living room.
+- tapOn:
+    id: "map"
+- tapOn:
+    id: "room_rename"
+# The dialog is a window of its own, where Android does not hand the test tags on as ids: what is
+# in it is found by what it says.
+- tapOn: "Living room"
+- eraseText: 20
+- inputText: "Lounge"
+- tapOn: "Save"
+- assertVisible: "Map. Rooms: Lounge, Kitchen, Bedroom"
+# Renaming lets go of the room, so it is picked again to be split.
+- tapOn:
+    id: "map"
+- tapOn:
+    id: "room_split"
+- assertVisible: "Draw a line across the room"
+# From the middle of the map to the left: a line across the living room, which lies on that side.
+- swipe:
+    from:
+      id: "map"
+    direction: LEFT
+- assertVisible: "Split here"
+- tapOn:
+    id: "map_confirm"
+# The part cut off is a room of its own, which has no name yet and so goes by its number.
+- extendedWaitUntil:
+    visible: "Map. Rooms: Lounge, Kitchen, Bedroom, 4"
+    timeout: 10000

@@ -8,12 +8,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -21,7 +23,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.booleanOrNull
@@ -36,12 +43,20 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
-/** Where the robot's address is kept between launches. Each platform has its own place for it. */
-interface AddressStore {
-    fun read(): String
+/**
+ * Where the little the app remembers between launches is kept: the robot's address and the name
+ * the user gave it. Each platform has its own place for it. A key never written reads as empty.
+ */
+interface SettingsStore {
+    fun read(key: String): String
 
-    fun write(address: String)
+    fun write(
+        key: String,
+        value: String,
+    )
 }
 
 /** Where things stand between the app and the robot. */
@@ -84,22 +99,48 @@ data class RobotSnapshot(
 @OptIn(ExperimentalCoroutinesApi::class)
 class RobotRepository(
     http: RobotApi,
-    private val store: AddressStore,
+    private val store: SettingsStore,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var api: RobotApi = http
-    private val currentAddress = MutableStateFlow(normalizeAddress(store.read()))
+    private val currentAddress = MutableStateFlow(normalizeAddress(store.read(ADDRESS_KEY)))
+    private val currentName = MutableStateFlow(store.read(NAME_KEY))
 
     /** Asks for the next reading now rather than when it is due — after a command, say. */
     private val kicks = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** How many of the coming readings fetch the map whether or not the robot moves. */
+    private val mapDue = MutableStateFlow(0)
 
     /** The robot's address as a URL without a trailing slash, or empty while there is none. */
     val address: StateFlow<String> = currentAddress
 
     fun setAddress(input: String) {
         val address = normalizeAddress(input)
-        store.write(address)
+        store.write(ADDRESS_KEY, address)
         currentAddress.value = address
+    }
+
+    /**
+     * What the user calls the robot, or empty while it has no name. Only the app knows it: the
+     * robot is never told.
+     */
+    val name: StateFlow<String> = currentName
+
+    fun setName(input: String) {
+        val name = input.trim().take(NAME_MAX_LENGTH)
+        store.write(NAME_KEY, name)
+        currentName.value = name
+    }
+
+    /**
+     * The robot's state, asked once and apart from the regular asking — for a home screen widget,
+     * which nobody is looking at for long. Null when there is no address or no answer.
+     */
+    suspend fun readState(): RobotState? {
+        val address = currentAddress.value
+        if (address.isEmpty()) return null
+        return attempt { parseAttributes(api.get(address, "robot/state/attributes").jsonArray) }.getOrNull()
     }
 
     /**
@@ -123,7 +164,7 @@ class RobotRepository(
             .distinctUntilChangedBy { it?.address }
             .flatMapLatest { connected ->
                 if (connected == null) {
-                    flowOf(null)
+                    flowOf<RobotDetails?>(null)
                 } else {
                     flow {
                         while (true) {
@@ -134,29 +175,96 @@ class RobotRepository(
                 }
             }.shareIn(scope, SharingStarted.WhileSubscribed(STOP_AFTER_MILLIS), replay = 1)
 
+    /**
+     * The robot at [address], heard from two ways at once. It is asked, every couple of seconds —
+     * and it is listened to: Congatudo and Valetudo push their state and their map when either
+     * changes. Whichever says something first is shown. Neither is relied on alone: a robot may
+     * push late or not at all, and asking alone is always a poll behind.
+     */
     private fun poll(address: String): Flow<Connection> =
-        flow {
-            emit(Connection.Connecting(address))
+        channelFlow {
+            send(Connection.Connecting(address))
+            // What is known so far, from either way; changed only under the lock.
+            val lock = Mutex()
             var setup: Setup? = null
+            var state: RobotState? = null
             var map: RobotMap? = null
+            var mapPushed: TimeMark? = null
+
+            suspend fun publish() {
+                val known = setup ?: return
+                val current = state ?: return
+                send(Connection.Connected(address, RobotSnapshot(current, map, known.capabilities, known.fanPresets, known.waterPresets)))
+            }
+            launch {
+                listen(address, "robot/state/attributes/sse") { pushed ->
+                    val read = parseAttributes(pushed.jsonArray)
+                    lock.withLock {
+                        state = read
+                        publish()
+                    }
+                }
+            }
+            launch {
+                listen(address, "robot/state/map/sse") { pushed ->
+                    val read = parseMap(pushed.jsonObject)
+                    lock.withLock {
+                        map = read
+                        mapPushed = TimeSource.Monotonic.markNow()
+                        publish()
+                    }
+                }
+            }
             var cycle = 0
             var kicked = false
             while (true) {
                 val reading =
                     attempt {
-                        val known = setup ?: readSetup(address).also { setup = it }
-                        val state = parseAttributes(api.get(address, "robot/state/attributes").jsonArray)
-                        // The map only changes while the robot moves, and it is the big answer.
-                        if (map == null || kicked || state.status.onTheMove || cycle % IDLE_MAP_EVERY == 0) {
-                            map = parseMap(api.get(address, "robot/state/map").jsonObject)
+                        val known = lock.withLock { setup } ?: readSetup(address)
+                        val read = parseAttributes(api.get(address, "robot/state/attributes").jsonArray)
+                        // The map only changes while the robot moves, and it is the big answer: it
+                        // is not asked for while the robot is sending it anyway.
+                        val due = mapDue.value > 0
+                        val pushedLately = lock.withLock { mapPushed }?.let { it.elapsedNow() < MAP_PUSH_FRESH } == true
+                        val wanted = lock.withLock { map } == null || kicked || due || cycle % IDLE_MAP_EVERY == 0
+                        val asked =
+                            if (wanted || (read.status.onTheMove && !pushedLately)) {
+                                parseMap(api.get(address, "robot/state/map").jsonObject).also {
+                                    if (due) mapDue.update { left -> (left - 1).coerceAtLeast(0) }
+                                }
+                            } else {
+                                null
+                            }
+                        lock.withLock {
+                            setup = known
+                            state = read
+                            asked?.let { map = it }
+                            publish()
                         }
-                        Connection.Connected(address, RobotSnapshot(state, map, known.capabilities, known.fanPresets, known.waterPresets))
+                        read
                     }
-                emit(reading.getOrElse { Connection.Unreachable(address, it.message) })
+                reading.onFailure { send(Connection.Unreachable(address, it.message)) }
                 cycle++
-                kicked = withTimeoutOrNull(POLL_EVERY) { kicks.first() } != null
+                val moving = reading.getOrNull()?.status?.onTheMove == true
+                kicked = withTimeoutOrNull(if (moving) POLL_MOVING_EVERY else POLL_EVERY) { kicks.first() } != null
             }
         }
+
+    /**
+     * Hands every event of the robot's stream at [path] to [onEvent], for good: a stream that
+     * breaks off, or that the robot does not have, is tried again after a while. One event that
+     * makes no sense is skipped, not the stream.
+     */
+    private suspend fun listen(
+        address: String,
+        path: String,
+        onEvent: suspend (JsonElement) -> Unit,
+    ) {
+        while (true) {
+            attempt { api.events(address, path).collect { event -> attempt { onEvent(event) } } }
+            delay(LISTEN_AGAIN_AFTER)
+        }
+    }
 
     /** What does not change while the app runs: read once per connection. */
     private class Setup(
@@ -221,7 +329,14 @@ class RobotRepository(
                     ?.get("signal")
                     ?.jsonPrimitive
                     ?.intOrNull,
-            model = robot?.let { listOfNotNull(it.text("manufacturer"), it.text("modelName")).joinToString(" ") }?.takeIf { it.isNotBlank() },
+            model =
+                robot
+                    ?.let {
+                        listOfNotNull(
+                            it.text("manufacturer"),
+                            it.text("modelName"),
+                        ).joinToString(" ")
+                    }?.takeIf { it.isNotBlank() },
             version = read(null, "valetudo/version")?.text("release"),
         )
     }
@@ -287,6 +402,54 @@ class RobotRepository(
             point("coordinates", cell, cellSize)
         }
 
+    /** Makes one room of two that lie next to each other; the robot decides which of them it stays. */
+    suspend fun joinRooms(
+        first: String,
+        second: String,
+    ): Result<Unit> =
+        editRooms(SEGMENT_EDIT) {
+            put("action", "join_segments")
+            put("segment_a_id", first)
+            put("segment_b_id", second)
+        }
+
+    /** Cuts the room [id] in two along the line from [from] to [to], given in cells as for [cleanZone]. */
+    suspend fun splitRoom(
+        id: String,
+        from: Offset,
+        to: Offset,
+        cellSize: Int,
+    ): Result<Unit> =
+        editRooms(SEGMENT_EDIT) {
+            put("action", "split_segment")
+            put("segment_id", id)
+            point("pA", from, cellSize)
+            point("pB", to, cellSize)
+        }
+
+    suspend fun renameRoom(
+        id: String,
+        name: String,
+    ): Result<Unit> =
+        editRooms(SEGMENT_RENAME) {
+            put("action", "rename_segment")
+            put("segment_id", id)
+            put("name", name.trim().take(NAME_MAX_LENGTH))
+        }
+
+    /**
+     * A command that changes the map while the robot stands still — which is when the map is
+     * otherwise hardly read. A robot may take a moment to redraw it, so the next few readings
+     * fetch it again.
+     */
+    private suspend fun editRooms(
+        capability: String,
+        body: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
+    ): Result<Unit> {
+        mapDue.value = MAP_READS_AFTER_EDIT
+        return send(capability, body)
+    }
+
     private fun kotlinx.serialization.json.JsonObjectBuilder.point(
         key: String,
         cell: Offset,
@@ -327,6 +490,10 @@ class RobotRepository(
     }
 
     private companion object {
+        const val ADDRESS_KEY = "address"
+        const val NAME_KEY = "name"
+        const val NAME_MAX_LENGTH = 40
+
         const val FAN = "FanSpeedControlCapability"
         const val WATER = "WaterUsageControlCapability"
         const val CONSUMABLES = "ConsumableMonitoringCapability"
@@ -334,9 +501,24 @@ class RobotRepository(
         const val CARPET = "CarpetModeControlCapability"
         const val DO_NOT_DISTURB = "DoNotDisturbCapability"
         const val WIFI = "WifiConfigurationCapability"
+        const val SEGMENT_EDIT = "MapSegmentEditCapability"
+        const val SEGMENT_RENAME = "MapSegmentRenameCapability"
+
+        /** With a reading every two seconds, this follows the map for some ten seconds after an edit. */
+        const val MAP_READS_AFTER_EDIT = 5
 
         val POLL_EVERY = 2.seconds
+
+        /**
+         * While the robot moves it is asked as often as it has anything new to say: Congatudo
+         * holds its map updates back to one a second, so asking faster only reads the same map twice.
+         */
+        val POLL_MOVING_EVERY = 1.seconds
         val DETAILS_EVERY = 20.seconds
+
+        /** A map the robot pushed this recently need not be asked for as well. */
+        val MAP_PUSH_FRESH = 3.seconds
+        val LISTEN_AGAIN_AFTER = 10.seconds
 
         /** While the robot stands still the map is read every this many polls. */
         const val IDLE_MAP_EVERY = 8

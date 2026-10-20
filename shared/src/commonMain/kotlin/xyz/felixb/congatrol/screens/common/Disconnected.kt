@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -71,7 +72,7 @@ fun String.shown(): String = removePrefix("http://")
 
 /**
  * What every tab shows while there is no robot: why, and the one thing that can be done about
- * it — saying where the robot is.
+ * it — saying where the robot is. [footer] is for what a tab offers robot or not.
  */
 @Composable
 fun DisconnectedContent(
@@ -79,6 +80,7 @@ fun DisconnectedContent(
     onSaveAddress: (String) -> Unit,
     modifier: Modifier = Modifier,
     bottomInset: Dp = 0.dp,
+    footer: @Composable () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
@@ -111,6 +113,7 @@ fun DisconnectedContent(
         CongatrolCard(modifier = Modifier.fillMaxWidth()) {
             AddressForm(address = ui.address, onSave = onSaveAddress, modifier = Modifier.padding(16.dp))
         }
+        footer()
         Spacer(Modifier.height(bottomInset))
     }
 }
@@ -124,6 +127,12 @@ fun AddressForm(
 ) {
     var text by rememberSaveable(address) { mutableStateOf(address) }
     val changed = text.trim() != address
+    val focusManager = LocalFocusManager.current
+    // Saving lets go of the field, which is what puts the keyboard away.
+    val save = {
+        focusManager.clearFocus()
+        if (changed) onSave(text)
+    }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedTextField(
             value = text,
@@ -132,10 +141,10 @@ fun AddressForm(
             placeholder = { Text(stringResource(Res.string.address_placeholder)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go, autoCorrectEnabled = false),
-            keyboardActions = KeyboardActions(onGo = { if (changed) onSave(text) }),
+            keyboardActions = KeyboardActions(onGo = { save() }),
             modifier = Modifier.fillMaxWidth().testTag("address_field"),
         )
-        Button(onClick = { onSave(text) }, enabled = changed, modifier = Modifier.testTag("address_save")) {
+        Button(onClick = save, enabled = changed, modifier = Modifier.testTag("address_save")) {
             Text(stringResource(Res.string.address_save))
         }
     }

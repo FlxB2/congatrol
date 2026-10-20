@@ -18,8 +18,8 @@
     <string name="status_manual_control">Driven by hand</string>
     <string name="status_error">Needs a hand</string>
     <string name="status_unknown">Robot</string>
-    <string name="battery">Battery %1$d%%</string>
-    <string name="battery_charging">Battery %1$d%% · charging</string>
+    <string name="battery">Battery %1$d%</string>
+    <string name="battery_charging">Battery %1$d% · charging</string>
 
     <string name="connect_title">Where is the robot?</string>
     <string name="connect_body">Enter the address of a robot running Congatudo or Valetudo on your network — the one you open its web interface with.</string>
@@ -29,6 +29,12 @@
     <string name="address_label">Robot address</string>
     <string name="address_placeholder">192.168.1.50 or robot.local</string>
     <string name="address_save">Connect</string>
+
+    <string name="widget_caption">%1$s · %2$s</string>
+    <string name="widget_battery">%1$d%</string>
+    <string name="widget_battery_unknown">–</string>
+    <string name="widget_no_address">Not set up</string>
+    <string name="widget_unreachable">No answer</string>
 
     <string name="command_failed">The robot did not take that.</string>
 
@@ -44,12 +50,22 @@
     <string name="confirm_room">Clean %1$s</string>
     <string name="confirm_zone">Clean this zone</string>
     <string name="confirm_go_to">Go here</string>
+    <string name="map_description">Map. Rooms: %1$s</string>
+    <string name="map_edit_rooms">Edit rooms</string>
+    <string name="hint_edit">Tap a room, or two to join them</string>
+    <string name="hint_split">Draw a line across the room</string>
+    <string name="confirm_split">Split here</string>
+    <string name="room_rename">Rename</string>
+    <string name="room_split">Split</string>
+    <string name="room_join">Join</string>
+    <string name="room_rename_title">Name this room</string>
+    <string name="room_name_label">Room name</string>
     <string name="suction">Suction</string>
     <string name="water">Water</string>
     <string name="preset_off">Off</string>
     <string name="preset_min">Min</string>
     <string name="preset_low">Low</string>
-    <string name="preset_medium">Medium</string>
+    <string name="preset_medium">Mid</string>
     <string name="preset_high">High</string>
     <string name="preset_max">Max</string>
     <string name="preset_turbo">Turbo</string>
@@ -66,11 +82,15 @@
     <string name="drive_right">Turn right</string>
 
     <string name="robot_title">Robot</string>
+    <string name="robot_name">Name</string>
+    <string name="robot_name_label">Robot name</string>
+    <string name="robot_name_body">Only this app uses it; the robot is not told.</string>
+    <string name="robot_name_save">Save</string>
     <string name="robot_connection">Connection</string>
     <string name="robot_sound">Sound</string>
     <string name="robot_locate">Find the robot</string>
     <string name="robot_locate_body">Makes it call out so you can hear where it is.</string>
-    <string name="robot_volume">Volume %1$d%%</string>
+    <string name="robot_volume">Volume %1$d%</string>
     <string name="robot_cleaning">Cleaning</string>
     <string name="robot_carpet">Carpet mode</string>
     <string name="robot_carpet_body">More suction on carpet.</string>
@@ -87,11 +107,20 @@
     <string name="robot_version">Software</string>
     <string name="robot_wifi">Wi‑Fi signal</string>
     <string name="robot_wifi_value">%1$d dBm</string>
+    <string name="robot_licenses">Open source licences</string>
+    <string name="licenses_title">Open source licences</string>
+    <string name="licenses_back">Back</string>
+    <string name="licenses_intro">Congatrol is built on open source software. These are the libraries, fonts and icons this app includes, and the licences they are shared under.</string>
+    <string name="licenses_empty">No licence information available.</string>
+    <string name="license_version">Version</string>
+    <string name="license_author">Author</string>
+    <string name="license_website">Website</string>
+    <string name="license_view_online">View online</string>
     <string name="consumable_main_brush">Main brush</string>
     <string name="consumable_side_brush">Side brush</string>
     <string name="consumable_filter">Filter</string>
     <string name="consumable_mop">Mop</string>
     <string name="consumable_sensor">Sensors</string>
     <string name="consumable_hours">%1$d h left</string>
-    <string name="consumable_percent">%1$d%% left</string>
+    <string name="consumable_percent">%1$d% left</string>
 </resources>

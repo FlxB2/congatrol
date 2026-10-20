@@ -1,0 +1,30 @@
+# A room is picked on the map and cleaned; Stop ends the run.
+appId: ${APP_ID}
+---
+- runFlow: ../common/launch_demo.yaml
+- tapOn:
+    id: "mode_Rooms"
+- assertVisible: "Tap the rooms to clean"
+# The middle of the map is in the invented flat's living room.
+- tapOn:
+    id: "map"
+# The button carries the id and its label the text, so they are asked for separately.
+- assertVisible:
+    id: "map_confirm"
+- assertVisible: "Clean Living room"
+- tapOn:
+    id: "map_confirm"
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Cleaning"
+    timeout: 10000
+- runFlow: ../common/reveal_controls.yaml
+- tapOn:
+    id: "stop"
+- runFlow: ../common/reveal_status.yaml
+- extendedWaitUntil:
+    visible:
+      id: "status"
+      text: "Idle"
+    timeout: 10000

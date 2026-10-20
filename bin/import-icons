@@ -37,11 +37,14 @@ ICONS: dict[str, str] = {
     "zone": "selection-duotone",
     "go-to": "map-pin-duotone",
     "recenter": "corners-out-bold",
+    "edit": "pencil-simple-bold",
     "arrow-up": "arrow-up-bold",
     "arrow-down": "arrow-down-bold",
     "turn-left": "arrow-counter-clockwise-bold",
     "turn-right": "arrow-clockwise-bold",
     "warning": "warning-duotone",
+    "back": "arrow-left-bold",
+    "chevron": "caret-right-bold",
 }
 
 ROOT = Path(__file__).resolve().parent.parent

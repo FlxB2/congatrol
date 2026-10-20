@@ -1,0 +1,13 @@
+# Scrolls the map screen up so that Stop and Dock are clear of the floating bar.
+#
+# On a small screen they start out under it, where the bar would take the tap. The swipe starts on
+# the mode row rather than mid-screen: a drag over the map moves the map, not the page.
+appId: ${APP_ID}
+tags:
+  - util
+---
+- swipe:
+    from:
+      id: "mode_Zone"
+    direction: UP
+- waitForAnimationToEnd

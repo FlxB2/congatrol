@@ -1,0 +1,37 @@
+# The licence list opens from the Robot tab, a library opens its licence, and back leads out.
+appId: ${APP_ID}
+---
+- runFlow: ../common/launch_demo.yaml
+- tapOn:
+    id: "tab_robot"
+# Centred, because the row is the last on the page: merely visible, it can still sit under the
+# floating bar, which would take the tap.
+- scrollUntilVisible:
+    element:
+      id: "licenses"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "licenses"
+- assertVisible:
+    id: "licenses_list"
+- tapOn:
+    id: "license_row"
+    index: 0
+- scrollUntilVisible:
+    element:
+      id: "license_text"
+    direction: DOWN
+- tapOn:
+    id: "back"
+- assertVisible:
+    id: "licenses_list"
+# Back on the Robot tab. Where on it is not promised, so the link is scrolled to again.
+- tapOn:
+    id: "back"
+- assertNotVisible:
+    id: "licenses_list"
+- scrollUntilVisible:
+    element:
+      id: "licenses"
+    direction: DOWN

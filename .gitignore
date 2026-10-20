@@ -5,7 +5,7 @@
 xcuserdata
 !src/**/build/
 local.properties
-# app/ is opened in IntelliJ as its own project; only the config every checkout should share is tracked.
+# Only the IDE config every checkout should share is tracked.
 .idea/*
 !.idea/runConfigurations/
 !.idea/runConfigurations.xml

@@ -1,0 +1,13 @@
+{
+  "uniqueId": "com.googlefonts:manrope",
+  "name": "Manrope",
+  "website": "https://github.com/googlefonts/manrope",
+  "developers": [
+    {
+      "name": "The Manrope Project Authors"
+    }
+  ],
+  "licenses": [
+    "manrope-ofl"
+  ]
+}

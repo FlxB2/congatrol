@@ -2,4 +2,10 @@
 <resources>
     <!-- Mirrors Material 3's default dark `surface`. -->
     <color name="launch_background">#FF141218</color>
+
+    <color name="widget_pane">#F21C1A23</color>
+    <color name="widget_ink">#FFF3F0F9</color>
+    <color name="widget_quiet">#FFA7A1B6</color>
+    <color name="widget_accent">#FFA59CDC</color>
+    <color name="widget_on_accent">#FF15131C</color>
 </resources>

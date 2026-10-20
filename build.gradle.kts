@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.aboutLibraries) apply false
 }
 
 // Resolved here, in the root script, because the type-safe `libs` accessor isn't visible against

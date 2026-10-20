@@ -1,0 +1,4 @@
+<resources>
+    <!-- The debug build installs next to the release one, so it says which it is. -->
+    <string name="app_name">Congatrol (debug)</string>
+</resources>

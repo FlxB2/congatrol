@@ -1,0 +1,13 @@
+{
+  "uniqueId": "com.phosphoricons:phosphor",
+  "name": "Phosphor Icons",
+  "website": "https://phosphoricons.com",
+  "developers": [
+    {
+      "name": "Phosphor Icons"
+    }
+  ],
+  "licenses": [
+    "phosphor-mit"
+  ]
+}

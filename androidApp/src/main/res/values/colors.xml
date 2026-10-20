@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-      Mirrors Material 3's default light `surface`, which is what CongatrolTheme paints first. Kept in
-      sync with values-night/colors.xml so the pre-Compose window matches Compose's first frame.
+      Mirrors Material 3's default light `surface`, which is what CongatrolTheme paints first. Kept
+      in sync with values-night/colors.xml so the pre-Compose window matches Compose's first frame.
     -->
     <color name="launch_background">#FFFEF7FF</color>
+
+    <!-- The widget, in the app's colours (theme/Theme.kt), which a RemoteViews cannot ask for. -->
+    <color name="widget_pane">#F2FFFFFF</color>
+    <color name="widget_ink">#FF17151E</color>
+    <color name="widget_quiet">#FF6A6478</color>
+    <color name="widget_accent">#FF4B3AB8</color>
+    <color name="widget_on_accent">#FFFFFFFF</color>
 </resources>

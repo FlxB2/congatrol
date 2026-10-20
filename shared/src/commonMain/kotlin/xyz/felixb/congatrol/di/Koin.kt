@@ -7,9 +7,12 @@ import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
 import xyz.felixb.congatrol.ActionViewModel
 import xyz.felixb.congatrol.data.HttpRobotApi
+import xyz.felixb.congatrol.data.LicenseRepository
 import xyz.felixb.congatrol.data.RobotApi
 import xyz.felixb.congatrol.data.RobotRepository
 import xyz.felixb.congatrol.screens.drive.DriveViewModel
+import xyz.felixb.congatrol.screens.licenses.LicenseDetailViewModel
+import xyz.felixb.congatrol.screens.licenses.LicensesViewModel
 import xyz.felixb.congatrol.screens.map.MapViewModel
 import xyz.felixb.congatrol.screens.robot.RobotViewModel
 
@@ -21,11 +24,14 @@ val appModule =
         viewModelOf(::MapViewModel)
         viewModelOf(::DriveViewModel)
         viewModelOf(::RobotViewModel)
+        single { LicenseRepository() }
+        viewModelOf(::LicensesViewModel)
+        viewModelOf(::LicenseDetailViewModel)
     }
 
 /**
  * Starts the graph. Each platform passes a module binding what only it can build: the
- * `AddressStore`, which keeps the robot's address between launches.
+ * `SettingsStore`, which keeps the robot's address and name between launches.
  */
 fun initKoin(platformModule: Module) {
     startKoin {

@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Congatrol</string>
+    <string name="widget_name">Start and battery</string>
+    <string name="widget_description">Starts the robot and shows its battery</string>
+    <string name="widget_start">Start cleaning</string>
+    <string name="widget_starting">Starting…</string>
+    <string name="widget_battery_unknown">–</string>
+</resources>

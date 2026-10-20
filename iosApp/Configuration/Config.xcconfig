@@ -19,6 +19,3 @@ EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64
 
 // Apple Developer Team ID — fill in for device / TestFlight signing.
 TEAM_ID =
-
-// Room's bundled SQLite driver ships native code that needs the system C++ runtime.
-OTHER_LDFLAGS = $(inherited) -l"c++"

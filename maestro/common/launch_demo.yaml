@@ -1,0 +1,21 @@
+# Cold start from a clean slate, on the invented robot — the entry point of every flow.
+#
+# `clearState` forgets the address and the name, and the `demo` argument has the app talk to
+# `DemoRobotApi` instead of a robot: a flat with three rooms, docked and fully charged. No flow
+# ever reaches a real robot. Android receives the argument as a boolean intent extra
+# (MainActivity), iOS as a bare `demo true` pair of launch arguments (KoinIos.kt). Debug builds
+# only.
+appId: ${APP_ID}
+tags:
+  - util
+---
+- launchApp:
+    clearState: true
+    arguments:
+      demo: true
+# The status being up is what proves the app started and reached its robot: without one there
+# would be the question for an address instead.
+- extendedWaitUntil:
+    visible:
+      id: "status"
+    timeout: 30000
