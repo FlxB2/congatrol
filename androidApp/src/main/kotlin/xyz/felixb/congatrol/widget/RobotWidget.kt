@@ -1,5 +1,6 @@
 package xyz.felixb.congatrol.widget
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
@@ -37,33 +38,21 @@ import kotlin.time.TimeSource
  * and after one of the buttons was pressed — not in between: a widget that kept asking would keep
  * the phone and the robot awake for something nobody is looking at.
  */
-class ClearWidgetProvider : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = ClearWidget()
-}
+class ClearWidgetProvider : RobotWidgetReceiver()
 
-class RingWidgetProvider : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = RingWidget()
-}
+class RingWidgetProvider : RobotWidgetReceiver()
 
-class FloorplanWidgetProvider : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = FloorplanWidget()
-}
+class FloorplanWidgetProvider : RobotWidgetReceiver()
 
 /**
- * Each look is its own class: Glance finds the widgets to update by their class, and one class for
- * all would draw every widget in one look.
+ * There is one receiver per look only because each is an entry in the launcher's list of widgets.
+ * They all hand out the one widget, so that one update reaches every widget whatever its look.
  */
-class ClearWidget : RobotGlanceWidget(WidgetLook.Clear)
+abstract class RobotWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = RobotGlanceWidget()
+}
 
-class RingWidget : RobotGlanceWidget(WidgetLook.Ring)
-
-class FloorplanWidget : RobotGlanceWidget(WidgetLook.Floorplan)
-
-private fun everyLook(): List<GlanceAppWidget> = listOf(ClearWidget(), RingWidget(), FloorplanWidget())
-
-abstract class RobotGlanceWidget(
-    private val look: WidgetLook,
-) : GlanceAppWidget() {
+class RobotGlanceWidget : GlanceAppWidget() {
     /** The rooms are only shown where there is the height for them, so the content needs the size. */
     override val sizeMode = SizeMode.Exact
 
@@ -71,9 +60,29 @@ abstract class RobotGlanceWidget(
         context: Context,
         id: GlanceId,
     ) {
+        val look = lookOf(context, id)
         // The launcher's half-hourly update lands here, as does the first drawing of a new widget.
         RobotWidget.readIfStale()
         provideContent { WidgetContent(look) }
+    }
+
+    /** A widget's look is the entry it was placed from, which the launcher keeps for it. */
+    private fun lookOf(
+        context: Context,
+        id: GlanceId,
+    ): WidgetLook {
+        val widgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
+        val placedFrom =
+            AppWidgetManager
+                .getInstance(context)
+                .getAppWidgetInfo(widgetId)
+                ?.provider
+                ?.className
+        return when (placedFrom) {
+            RingWidgetProvider::class.java.name -> WidgetLook.Ring
+            FloorplanWidgetProvider::class.java.name -> WidgetLook.Floorplan
+            else -> WidgetLook.Clear
+        }
     }
 }
 
@@ -123,14 +132,10 @@ object RobotWidget {
         redraw(context)
     }
 
-    private suspend fun redraw(context: Context) {
-        everyLook().forEach { it.updateAll(context) }
-    }
+    private suspend fun redraw(context: Context) = RobotGlanceWidget().updateAll(context)
 
-    private suspend fun anyPlaced(context: Context): Boolean {
-        val manager = GlanceAppWidgetManager(context)
-        return everyLook().any { manager.getGlanceIds(it.javaClass).isNotEmpty() }
-    }
+    private suspend fun anyPlaced(context: Context) =
+        GlanceAppWidgetManager(context).getGlanceIds(RobotGlanceWidget::class.java).isNotEmpty()
 
     /** An answer this young is the robot's answer still. */
     private val FRESH = 5.seconds

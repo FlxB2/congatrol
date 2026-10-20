@@ -118,9 +118,13 @@ What no dependency declares — the two fonts and the Phosphor icons — has a h
 
 ## The widget
 
-The widgets are Jetpack Glance, in `androidApp/.../widget/`. `RobotWidget.kt` has a receiver and
-a `GlanceAppWidget` per look (Clear, Ring, Floorplan; one class each, as Glance updates widgets by
-class) and the actions; `WidgetContent.kt` draws each `WidgetLook` from the size it is given.
+The widgets are Jetpack Glance, in `androidApp/.../widget/`. `RobotWidget.kt` has one
+`GlanceAppWidget` and a receiver per look (Clear, Ring, Floorplan), each only an entry in the
+launcher's list: a placed widget takes its look from the receiver it was placed from. Keep it one
+widget class — Glance finds widgets by class, and R8 merges look-per-class subclasses into one.
+`WidgetContent.kt` draws each `WidgetLook` from the size it is given. The buttons are
+`ActionCallback`s, which Glance makes by reflection; `androidApp/proguard-rules.pro` keeps their
+constructors, and only a release build shows when that breaks.
 Every look shows the name, the status, the battery, a start button and buttons for the rooms the
 robot has a name for (`RobotMap.namedRooms`), each cleaning its room and drawn in that room's
 colour on the map (`seriesColor`). They ask the robot once per update (`RobotRepository.readState`
