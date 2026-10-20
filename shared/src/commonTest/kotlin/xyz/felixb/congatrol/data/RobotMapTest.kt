@@ -74,6 +74,21 @@ class RobotMapTest {
     }
 
     @Test
+    fun onlyRoomsWithANameAreNamedRoomsAToZ() {
+        val map =
+            map(
+                """{"pixelSize":5,"layers":[
+                {"type":"segment","metaData":{"segmentId":"1","name":"living room"},"pixels":[0,0]},
+                {"type":"segment","metaData":{"segmentId":"2","name":" "},"pixels":[1,0]},
+                {"type":"segment","metaData":{"segmentId":"3"},"pixels":[2,0]},
+                {"type":"segment","metaData":{"segmentId":"4","name":"Bedroom"},"pixels":[3,0]}
+                ]}""",
+            )
+
+        assertEquals(listOf("4", "1"), map.namedRooms.map { it.id })
+    }
+
+    @Test
     fun aFittedViewportCentresTheBounds() {
         val viewport = fitViewport(Rect(10f, 10f, 30f, 20f), Size(200f, 200f), padding = 0f)
 

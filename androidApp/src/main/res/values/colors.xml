@@ -6,10 +6,15 @@
     -->
     <color name="launch_background">#FFFEF7FF</color>
 
-    <!-- The widget, in the app's colours (theme/Theme.kt), which a RemoteViews cannot ask for. -->
+    <!-- The ring widget's pane (drawable/widget_pane.xml); its other colours are in WidgetContent.kt. -->
     <color name="widget_pane">#F2FFFFFF</color>
-    <color name="widget_ink">#FF17151E</color>
-    <color name="widget_quiet">#FF6A6478</color>
-    <color name="widget_accent">#FF4B3AB8</color>
-    <color name="widget_on_accent">#FFFFFFFF</color>
+    <!-- The glow (theme/Theme.kt), left to right, at the strength it is drawn with on a widget. -->
+    <color name="widget_glow_left">#8CE9A8C4</color>
+    <color name="widget_glow_middle">#73C9B3EE</color>
+    <color name="widget_glow_right">#8C93A7DC</color>
+
+    <!-- The clear widget's outlines; its words are the same ink, in WidgetContent.kt. -->
+    <color name="widget_clear_ink">#FF1C1B1F</color>
+    <color name="widget_clear_line">#B31C1B1F</color>
+
 </resources>

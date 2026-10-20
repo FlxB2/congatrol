@@ -1,8 +1,14 @@
 <resources>
     <string name="app_name">Congatrol</string>
-    <string name="widget_name">Start and battery</string>
-    <string name="widget_description">Starts the robot and shows its battery</string>
+    <string name="widget_clear_name">Clear</string>
+    <string name="widget_clear_description">Start, rooms and battery, straight on the wallpaper</string>
+    <string name="widget_ring_name">Ring</string>
+    <string name="widget_ring_description">One row: the battery round the start button, and the rooms</string>
+    <string name="widget_floorplan_name">Floorplan</string>
+    <string name="widget_floorplan_description">Your rooms as tiles: tap one to clean it</string>
+    <string name="widget_no_rooms">Name rooms on the map</string>
     <string name="widget_start">Start cleaning</string>
     <string name="widget_starting">Starting…</string>
+    <string name="widget_clean_room">Clean %1$s</string>
     <string name="widget_battery_unknown">–</string>
 </resources>

@@ -44,10 +44,20 @@ class RobotMap(
     }
 }
 
+/**
+ * The rooms the robot has a name for, A to Z: what can be offered by name, as the widget does. A
+ * room without one would be a button nobody knows the meaning of.
+ */
+val RobotMap.namedRooms: List<MapRoom>
+    get() = rooms.filter { it.named }.sortedBy { it.name.trim().lowercase() }
+
 @Immutable
 class MapRoom(
     val id: String,
+    /** The robot's name for the room, or its id while it has none. */
     val name: String,
+    /** Whether the robot has a name for it, rather than only an id. */
+    val named: Boolean,
     val pixels: List<Offset>,
     val bounds: Rect,
     internal val cells: Set<Long>,
@@ -85,10 +95,12 @@ fun parseMap(json: JsonObject): RobotMap {
                 val meta = layer["metaData"]?.jsonObject
                 val id = meta?.get("segmentId")?.jsonPrimitive?.contentOrNull ?: return@forEach
                 val pixels = cells.map { it.center() }
+                val name = meta["name"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
                 rooms +=
                     MapRoom(
                         id = id,
-                        name = meta["name"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() } ?: id,
+                        name = name ?: id,
+                        named = name != null,
                         pixels = pixels,
                         bounds = boundsOf(pixels) ?: Rect.Zero,
                         cells = cells.mapTo(HashSet()) { cellKey(it.first, it.second) },

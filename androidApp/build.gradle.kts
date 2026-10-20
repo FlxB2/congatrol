@@ -8,6 +8,8 @@ plugins {
 dependencies {
     implementation(projects.shared)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.work.runtime)
     implementation(libs.compose.uiToolingPreview)
     implementation(libs.compose.foundation)
     implementation(libs.kotlinx.coroutines.core)
@@ -52,7 +54,7 @@ android {
             // What the app really feels like: a debuggable build runs without ART's optimisations,
             // and Compose scrolls visibly worse for it.
             isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Signed with the debug key until there is a real one. Not for distribution.
             signingConfig = signingConfigs.getByName("debug")
         }

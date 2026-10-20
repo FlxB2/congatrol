@@ -118,11 +118,19 @@ What no dependency declares — the two fonts and the Phosphor icons — has a h
 
 ## The widget
 
-`androidApp/.../widget/RobotWidget.kt` is plain `RemoteViews`: the name, the status, the battery
-and a start button. It asks the robot once per update (`RobotRepository.readState`) — every half
-hour, when the app is left, and after its button — and never polls. Its words come from the shared
-strings via `shared/src/androidMain/.../widget/WidgetSnapshot.kt`; its colours are copies of the
-theme's in `res/values*/colors.xml`, since a `RemoteViews` cannot ask the theme.
+The widgets are Jetpack Glance, in `androidApp/.../widget/`. `RobotWidget.kt` has a receiver and
+a `GlanceAppWidget` per look (Clear, Ring, Floorplan; one class each, as Glance updates widgets by
+class) and the actions; `WidgetContent.kt` draws each `WidgetLook` from the size it is given.
+Every look shows the name, the status, the battery, a start button and buttons for the rooms the
+robot has a name for (`RobotMap.namedRooms`), each cleaning its room and drawn in that room's
+colour on the map (`seriesColor`). They ask the robot once per update (`RobotRepository.readState`
+and `readMap`) — every half hour, when the app is left, and after a button — and never poll.
+Their words come from the shared strings via `shared/src/androidMain/.../widget/WidgetSnapshot.kt`.
+
+A widget cannot ask the theme, so the colours are copies of `theme/Theme.kt`'s. Shapes are white
+drawables tinted where they are used; a tint drops alpha, so tint colours are opaque, and it fills
+a stroke-only shape in, so Clear's outlines take their colour from `res/values*/colors.xml`
+instead. The Ring's battery ring is a bitmap wedge, since Glance has no determinate circle.
 
 ## End-to-end flows
 

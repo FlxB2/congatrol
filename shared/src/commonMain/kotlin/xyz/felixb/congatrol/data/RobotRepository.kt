@@ -143,6 +143,13 @@ class RobotRepository(
         return attempt { parseAttributes(api.get(address, "robot/state/attributes").jsonArray) }.getOrNull()
     }
 
+    /** The robot's map, asked once like [readState]. Null when there is no address or no answer. */
+    suspend fun readMap(): RobotMap? {
+        val address = currentAddress.value
+        if (address.isEmpty()) return null
+        return attempt { parseMap(api.get(address, "robot/state/map").jsonObject) }.getOrNull()
+    }
+
     /**
      * Talks to the invented robot from here on, for previews and a `demo` launch. The stored
      * address is left alone.

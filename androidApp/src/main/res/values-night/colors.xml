@@ -4,8 +4,12 @@
     <color name="launch_background">#FF141218</color>
 
     <color name="widget_pane">#F21C1A23</color>
-    <color name="widget_ink">#FFF3F0F9</color>
-    <color name="widget_quiet">#FFA7A1B6</color>
-    <color name="widget_accent">#FFA59CDC</color>
-    <color name="widget_on_accent">#FF15131C</color>
+    <!-- The glow (theme/Theme.kt), left to right, at the strength it is drawn with on a widget. -->
+    <color name="widget_glow_left">#CC5E2148</color>
+    <color name="widget_glow_middle">#CC3F2E66</color>
+    <color name="widget_glow_right">#CC1F3570</color>
+
+    <color name="widget_clear_ink">#FFFFFFFF</color>
+    <color name="widget_clear_line">#CCFFFFFF</color>
+
 </resources>

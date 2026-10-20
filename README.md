@@ -4,8 +4,9 @@ A small app for robot vacuums running [Congatudo](https://congatudo.cloud) or
 [Valetudo](https://valetudo.cloud): the map, and the usual things to do with it, on your phone
 instead of in the robot's web interface.
 
-It talks to the robot directly over your home network, using the REST API the robot itself
-serves. There is no account, no cloud and no server in between.
+It runs on **Android and iOS** — one Kotlin Multiplatform codebase, the same app on both — and
+talks to the robot directly over your home network, using the REST API the robot itself serves.
+There is no account, no cloud and no server in between.
 
 <p>
   <img src="docs/screenshots/map.png" alt="The map with a room picked for cleaning" width="250">
@@ -23,6 +24,10 @@ serves. There is no account, no cloud and no server in between.
 > coding agent from my prompts; no human wrote or reviewed the code by hand. It has unit tests and
 > was tried against exactly one robot, my Cecotec Conga running Congatudo. It can send your robot
 > driving around your flat, so treat it accordingly.
+>
+> What keeps it honest is tests, not review: unit tests for the parsing and the invented robot, and
+> [Maestro](https://maestro.dev) end-to-end flows (`maestro/`) that tap through the real app on an
+> emulator against the invented robot — never against a real one.
 
 ## What it does
 
@@ -36,10 +41,39 @@ serves. There is no account, no cloud and no server in between.
 - **Robot** — give the robot a name, set its address, make it call out so you can find it,
   speaker volume, carpet mode, how worn the brushes and filter are (with reset), and what
   model and software it runs.
-- **Widget** (Android) — a home screen widget that starts the robot and shows its battery.
+- **Widgets** (Android) — three home screen widgets that start the robot, show its battery and
+  clean a room you named with one tap; see [below](#widgets).
 
 What a robot cannot do is left out: the app asks the robot for its capabilities and only shows
 what is there.
+
+## Widgets
+
+Android only, in three looks. Each one shows the robot's name, what it is doing and its battery,
+has a button that starts it, and has a button for every room you named: tap one and the robot
+cleans that room, and no other. Name rooms on the map, with the pencil; the robot keeps the
+names. Tapping anywhere else opens the app. All three follow the system's light and dark mode.
+
+**Clear** — 3 × 2, no background at all: the words and outlined buttons sit straight on the
+wallpaper, in white in dark mode and black in light mode. Made one cell high, it is only the
+start button and the battery.
+
+<img src="docs/screenshots/widget-clear.png" alt="The clear widget: name, status and battery, an outlined start button and one outlined button per room, straight on the wallpaper" width="390">
+
+**Ring** — 3 × 1, one row in the app's glow: the battery is a ring round the start button, and
+each room is a circle with its initial, in its colour on the map. The wider you make it, the more
+rooms fit; made one cell wide, it is only the ring.
+
+<img src="docs/screenshots/widget-ring.png" alt="The ring widget: the battery as a ring round the start button, the name and status, and a room initial per room" width="390">
+
+**Floorplan** — 2 × 2, the rooms as tiles in their colours on the map: the first room large,
+the others stacked beside it. Tap a tile to clean that room. Made one cell high, the tiles shrink
+to a thumbnail beside the name and the start button.
+
+<img src="docs/screenshots/widget-floorplan.png" alt="The floorplan widget: name, status and start button above a tile for each room" width="262">
+
+The widgets ask the robot every half hour, when you leave the app, and after you press one of
+their buttons, and never in between, so they do not keep the phone or the robot awake.
 
 ## Using it with Congatudo
 
