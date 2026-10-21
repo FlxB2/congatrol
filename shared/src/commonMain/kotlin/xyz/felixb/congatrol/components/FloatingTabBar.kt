@@ -1,8 +1,6 @@
 package xyz.felixb.congatrol.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -27,30 +25,21 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -64,13 +53,13 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import xyz.felixb.congatrol.theme.CongatrolTheme
 import xyz.felixb.congatrol.theme.LocalCongatrolLook
 import xyz.felixb.congatrol.theme.PreviewCongatrol
 import xyz.felixb.congatrol.theme.congatrolBackground
+import kotlin.math.roundToInt
 
 /**
  * How much room a screen keeps free below its content so the last element can be scrolled clear of
@@ -103,59 +92,49 @@ fun FloatingTabBar(
     // their size no longer fit next to each other.
     val density = LocalDensity.current
     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale = 1f)) {
-        Row(
-            modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            // Where each tab lies in the pill, so that the mark of the current one can travel between them.
-            val spans = remember { mutableStateMapOf<String, ClosedFloatingPointRange<Float>>() }
-            val markLeft = remember { Animatable(0f) }
-            val markRight = remember { Animatable(0f) }
-            var marked by remember { mutableStateOf(false) }
-            val span = spans[selectedKey]
-            LaunchedEffect(span) {
-                if (span == null) return@LaunchedEffect
-                if (marked) {
-                    // The edge in front leads and the one behind follows: the mark stretches on its way.
-                    launch { markLeft.animateTo(span.start, Motion.bouncy()) }
-                    launch { markRight.animateTo(span.endInclusive, Motion.bouncy()) }
-                } else {
-                    markLeft.snapTo(span.start)
-                    markRight.snapTo(span.endInclusive)
-                    marked = true
-                }
-            }
-            // The current tab is pressed into the bar, not coloured in.
-            val mark = MaterialTheme.colorScheme.onSurface.copy(alpha = MARK_ALPHA)
+        ScaleToFit(modifier = modifier) {
             Row(
-                modifier =
-                    Modifier.barMaterial(hazeState).padding(4.dp).drawBehind {
-                        if (marked) {
-                            drawRoundRect(
-                                color = mark,
-                                topLeft = Offset(markLeft.value, 0f),
-                                size = Size((markRight.value - markLeft.value).coerceAtLeast(0f), size.height),
-                                cornerRadius = CornerRadius(size.height / 2f),
-                            )
-                        }
-                    },
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items.forEach { item ->
-                    Tab(
-                        item = item,
-                        selected = item.key == selectedKey,
-                        onClick = { onSelect(item.key) },
-                        modifier =
-                            Modifier.onGloballyPositioned {
-                                val left = it.positionInParent().x
-                                spans[item.key] = left..left + it.size.width
-                            },
-                    )
+                Row(
+                    modifier = Modifier.barMaterial(hazeState).padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    items.forEach { item ->
+                        Tab(item = item, selected = item.key == selectedKey, onClick = { onSelect(item.key) })
+                    }
                 }
+                ActionButton(action = action)
             }
-            ActionButton(action = action)
+        }
+    }
+}
+
+/**
+ * Lays [content] out at its own width and, only where that is wider than there is room for,
+ * shrinks all of it alike to fit: on a narrow screen the bar gets smaller rather than cut off.
+ */
+@Composable
+private fun ScaleToFit(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Layout(content = content, modifier = modifier) { measurables, constraints ->
+        val placeable = measurables.first().measure(Constraints())
+        val scale =
+            if (constraints.hasBoundedWidth && placeable.width > constraints.maxWidth) {
+                constraints.maxWidth.toFloat() / placeable.width
+            } else {
+                1f
+            }
+        layout((placeable.width * scale).roundToInt(), (placeable.height * scale).roundToInt()) {
+            placeable.placeRelativeWithLayer(0, 0) {
+                scaleX = scale
+                scaleY = scale
+                transformOrigin = TransformOrigin(0f, 0f)
+            }
         }
     }
 }
@@ -240,7 +219,6 @@ private fun ActionButton(
 private val ActionButtonSize = 60.dp
 private const val DISABLED_ALPHA = 0.45f
 private const val MARK_ALPHA = 0.09f
-private const val SELECTED_ICON_SCALE = 1.14f
 
 @Composable
 private fun Tab(
@@ -250,15 +228,16 @@ private fun Tab(
     modifier: Modifier = Modifier,
 ) {
     val content = MaterialTheme.colorScheme.onSurface
-    // The tab gone to perks up for a moment; the mark behind it is the bar's to draw.
-    val lift by animateFloatAsState(if (selected) SELECTED_ICON_SCALE else 1f, Motion.bouncy())
+    // The current tab is pressed into the bar, not coloured in.
+    val mark = if (selected) content.copy(alpha = MARK_ALPHA) else Color.Transparent
     Column(
         modifier =
             modifier
                 .testTag("tab_${item.key}")
                 .clip(CircleShape)
+                .background(mark)
                 .selectable(selected = selected, role = Role.Tab, onClick = onClick)
-                .padding(horizontal = 18.dp, vertical = 8.dp),
+                .padding(horizontal = 28.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -266,11 +245,7 @@ private fun Tab(
             painter = painterResource(item.icon),
             contentDescription = null,
             tint = content,
-            modifier =
-                Modifier.size(24.dp).graphicsLayer {
-                    scaleX = lift
-                    scaleY = lift
-                },
+            modifier = Modifier.size(24.dp),
         )
         Text(
             text = item.label,
